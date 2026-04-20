@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="What to Wear" />
+  <meta name="theme-color" content="#0f0f0f" />
+  <title>What to Wear</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+    html, body { height: 100%; background: #0f0f0f; color: #f0ece4; font-family: 'Georgia', 'Times New Roman', serif; }
+    body { display: flex; flex-direction: column; align-items: center; padding: env(safe-area-inset-top, 44px) 20px 60px; min-height: 100vh; padding-top: max(44px, env(safe-area-inset-top)); }
+
+    .header { text-align: center; margin-bottom: 36px; margin-top: 20px; }
+    .sub { font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: #555; margin-bottom: 10px; }
+    h1 { font-size: clamp(30px, 7vw, 44px); font-weight: normal; letter-spacing: -0.02em; }
+
+    .card { width: 100%; max-width: 380px; background: #1a1a1a; border: 1px solid #242424; border-radius: 16px; padding: 28px; margin-bottom: 12px; }
+    .section-label { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #555; margin-bottom: 20px; display: block; }
+    .field-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #555; display: block; margin-bottom: 8px; }
+
+    .temp-row { display: flex; gap: 12px; margin-bottom: 20px; }
+    .temp-group { flex: 1; }
+    input[type=number] { width: 100%; padding: 12px 14px; background: #111; border: 1px solid #2a2a2a; border-radius: 10px; color: #f0ece4; font-size: 16px; font-family: 'Georgia', serif; -webkit-appearance: none; }
+    input[type=number]:focus { outline: none; border-color: #555; }
+    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; margin-bottom: 28px; }
+    .chip { padding: 8px 13px; border-radius: 20px; font-size: 12px; cursor: pointer; font-family: 'Georgia', serif; border: 1px solid #2a2a2a; background: none; color: #666; transition: all 0.15s; }
+    .chip.active { background: #f0ece4; color: #0f0f0f; border-color: transparent; }
+
+    .main-btn { width: 100%; padding: 18px; background: #f0ece4; color: #0f0f0f; border: none; border-radius: 12px; font-size: 15px; letter-spacing: 0.03em; font-family: 'Georgia', serif; cursor: pointer; transition: opacity 0.2s; }
+    .main-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .main-btn:active { opacity: 0.8; }
+
+    .weather-strip { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; font-size: 13px; color: #777; padding: 14px 20px; }
+    .weather-strip strong { color: #f0ece4; font-size: 20px; }
+    .weather-icon { font-size: 20px; }
+
+    .vibe { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #555; margin-bottom: 22px; }
+    .outfit-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #1f1f1f; }
+    .row-label { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: #555; min-width: 56px; }
+    .row-val { font-size: 15px; color: #f0ece4; text-align: right; flex: 1; padding-left: 16px; }
+    .why { margin-top: 18px; font-size: 13px; color: #666; line-height: 1.65; font-style: italic; }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 24px; }
+    .log-btn { flex: 1; padding: 13px; background: #f0ece4; color: #0f0f0f; border: none; border-radius: 10px; font-size: 13px; cursor: pointer; font-family: 'Georgia', serif; transition: all 0.2s; }
+    .log-btn.logged { background: #1a2a1a; color: #4a8a4a; border: 1px solid #2a4a2a; cursor: default; }
+    .ghost-btn { flex: 1; padding: 13px; background: none; color: #777; border: 1px solid #2a2a2a; border-radius: 10px; font-size: 13px; cursor: pointer; font-family: 'Georgia', serif; }
+    .back-btn { width: 100%; margin-top: 10px; padding: 8px; background: none; color: #3a3a3a; border: none; font-size: 12px; cursor: pointer; font-family: 'Georgia', serif; }
+
+    .worn-section { width: 100%; max-width: 380px; margin-top: 20px; }
+    .worn-label { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: #333; margin-bottom: 10px; display: block; }
+    .tags { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { font-size: 11px; color: #444; background: #161616; border: 1px solid #1f1f1f; border-radius: 20px; padding: 4px 10px; }
+    .clear-btn { margin-top: 12px; background: none; border: none; color: #333; font-size: 11px; cursor: pointer; letter-spacing: 0.1em; font-family: 'Georgia', serif; }
+
+    .screen { display: none; }
+    .screen.active { display: block; width: 100%; max-width: 380px; }
+    #screen-result { display: none; }
+    #screen-result.active { display: block; width: 100%; }
+
+    @keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+    .fade-in { animation: fadeIn 0.3s ease; }
+    button:active { opacity: 0.75; }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div class="sub">Bentonville, AR</div>
+  <h1>What to Wear</h1>
+</div>
+
+<!-- INPUT SCREEN -->
+<div id="screen-input" class="screen active">
+  <div class="card">
+    <span class="section-label">Today's Weather</span>
+    <div class="temp-row">
+      <div class="temp-group">
+        <span class="field-label">Current °F</span>
+        <input type="number" id="inp-temp" placeholder="65" />
+      </div>
+      <div class="temp-group">
+        <span class="field-label">High °F</span>
+        <input type="number" id="inp-high" placeholder="80" />
+      </div>
+    </div>
+    <span class="field-label">Condition</span>
+    <div class="chips" id="chips"></div>
+    <button class="main-btn" id="go-btn" onclick="generateOutfit()">Get My Outfit</button>
+  </div>
+</div>
+
+<!-- RESULT SCREEN -->
+<div id="screen-result">
+  <div class="card weather-strip" id="weather-strip"></div>
+  <div class="card fade-in">
+    <div class="vibe" id="result-vibe"></div>
+    <div id="result-rows"></div>
+    <div class="why" id="result-why"></div>
+    <div class="btn-row">
+      <button class="log-btn" id="log-btn" onclick="logWorn()">I'll wear this</button>
+      <button class="ghost-btn" onclick="tryAnother()">Try another</button>
+    </div>
+    <button class="back-btn" onclick="showInput()">← Change weather</button>
+  </div>
+</div>
+
+<!-- WORN -->
+<div class="worn-section" id="worn-section" style="display:none">
+  <span class="worn-label">Recently Worn</span>
+  <div class="tags" id="worn-tags"></div>
+  <button class="clear-btn" onclick="clearWorn()">Clear history</button>
+</div>
+
+<script>
+// ── Wardrobe ──────────────────────────────────────────────────────────────────
+const W = {
+  tees: ["white tee","black tee","tan tee","olive green tee","gray tee"],
+  ls: ["white fitted Henley","black relaxed Henley","gold Henley","baby blue LS button-up","dark blue LS button-up","dark LS flannel","gray crewneck sweatshirt","black pullover hoodie"],
+  ss: ["white SS button-up","white/blue stripe SS button-up","white/orange stripe SS button-up","multicolor stripe SS button-up","denim SS button-up","mint SS button-up","olive SS button-up","gray polo","black SS button-up"],
+  layers: ["olive shirt jacket","denim shirt jacket","tan Gap shirt jacket","multicolor flannel overshirt","dark North Face zip-up","black windbreaker","brown blazer"],
+  chinos: ["navy chinos","tan chinos"],
+  jeans: ["black slim jeans","medium wash slim jeans","black carpenter jeans"],
+  shorts: ["olive shorts","khaki shorts"],
+};
+
+const CONDITIONS = ["Sunny","Partly cloudy","Cloudy","Windy","Chance of rain","Rainy","Thunderstorms"];
+let selectedCond = "Sunny";
+let worn = JSON.parse(localStorage.getItem("worn") || "[]");
+let lastOutfit = null;
+let extraAvoid = [];
+
+// ── Build chips ───────────────────────────────────────────────────────────────
+function icon(c) {
+  const l = c.toLowerCase();
+  if (l.includes("thunder")) return "⛈️";
+  if (l.includes("rain")) return "🌧️";
+  if (l.includes("wind")) return "💨";
+  if (l.includes("partly")) return "⛅";
+  if (l.includes("cloud")) return "☁️";
+  return "☀️";
+}
+
+const chipsEl = document.getElementById("chips");
+CONDITIONS.forEach(c => {
+  const b = document.createElement("button");
+  b.className = "chip" + (c === selectedCond ? " active" : "");
+  b.textContent = icon(c) + " " + c;
+  b.onclick = () => {
+    selectedCond = c;
+    document.querySelectorAll(".chip").forEach(x => x.classList.remove("active"));
+    b.classList.add("active");
+  };
+  chipsEl.appendChild(b);
+});
+
+// ── Outfit logic ──────────────────────────────────────────────────────────────
+function pick(arr, avoid) {
+  return arr.find(x => !avoid.has(x)) || arr[Math.floor(Math.random() * arr.length)];
+}
+
+function buildOutfit(temp, high, cond, avoidSet) {
+  const isRainy = ["Rainy","Thunderstorms","Chance of rain"].includes(cond);
+  const isWindy = cond === "Windy";
+  const shoes = isRainy ? "Blundstones" : "white sneakers";
+
+  let bottom, top, layer = null, vibe, why;
+
+  // Bottoms
+  if (high >= 78 && !isRainy) bottom = pick([...W.shorts, ...W.chinos], avoidSet);
+  else if (temp < 65) bottom = pick([...W.jeans, ...W.chinos], avoidSet);
+  else bottom = pick([...W.chinos, ...W.jeans], avoidSet);
+
+  // Tops + layers
+  if (temp < 55) {
+    top = pick(W.ls, avoidSet);
+    layer = pick(W.layers, avoidSet);
+    vibe = "Bundle up";
+    why = `At ${temp}°F it's cold — a long sleeve with a layer is the move.`;
+  } else if (temp < 65 && isWindy) {
+    top = pick([...W.tees, ...W.ls], avoidSet);
+    layer = pick(W.layers.filter(l => l !== "brown blazer"), avoidSet);
+    vibe = "Cool & breezy";
+    why = `${temp}°F with wind makes it feel colder — a layer you can peel off is key.`;
+  } else if (temp < 65) {
+    top = pick(W.ls, avoidSet);
+    if (high < 72) layer = pick(W.layers, avoidSet);
+    vibe = "Cool morning";
+    why = `${temp}°F now but climbing to ${high}°F — a long sleeve handles both ends.`;
+  } else if (temp < 75 && (isWindy || cond === "Cloudy" || cond === "Partly cloudy")) {
+    top = pick([...W.tees, ...W.ss], avoidSet);
+    layer = pick(W.layers.filter(l => !["dark North Face zip-up","brown blazer"].includes(l)), avoidSet);
+    vibe = "Warm with a breeze";
+    why = `Nice at ${temp}°F but the ${cond.toLowerCase()} calls for a light open layer.`;
+  } else if (temp < 75) {
+    top = pick([...W.tees, ...W.ss], avoidSet);
+    vibe = "Nice out";
+    why = `${temp}°F heading to ${high}°F — a tee or short sleeve is all you need.`;
+  } else {
+    top = pick([...W.tees, ...W.ss], avoidSet);
+    vibe = `Warm — ${high}°F high`;
+    why = `At ${temp}°F heading to ${high}°F, keep it light and breathable.`;
+  }
+
+  if (isRainy) {
+    vibe = "Rainy day";
+    why += " Blundstones for the wet.";
+  }
+
+  return { top, layer, bottom, shoes, vibe, why };
+}
+
+// ── Generate ──────────────────────────────────────────────────────────────────
+function generateOutfit(avoid = []) {
+  const temp = Number(document.getElementById("inp-temp").value);
+  const high = Number(document.getElementById("inp-high").value);
+  if (!temp || !high) return;
+
+  const avoidSet = new Set([...worn, ...avoid]);
+  lastOutfit = buildOutfit(temp, high, selectedCond, avoidSet);
+  extraAvoid = avoid;
+  showResult(temp, high);
+}
+
+function showResult(temp, high) {
+  const o = lastOutfit;
+
+  // Weather strip
+  document.getElementById("weather-strip").innerHTML =
+    `<span class="weather-icon">${icon(selectedCond)}</span>
+     <span><strong>${temp}°</strong> now</span>
+     <span>↑ ${high}°</span>
+     <span>${selectedCond}</span>`;
+
+  document.getElementById("result-vibe").textContent = o.vibe;
+
+  // Outfit rows
+  const rows = [["Top", o.top], ["Layer", o.layer], ["Bottom", o.bottom], ["Shoes", o.shoes]].filter(([,v]) => v);
+  document.getElementById("result-rows").innerHTML = rows.map(([l,v]) =>
+    `<div class="outfit-row"><span class="row-label">${l}</span><span class="row-val">${v}</span></div>`
+  ).join("");
+
+  document.getElementById("result-why").textContent = o.why;
+
+  const logBtn = document.getElementById("log-btn");
+  logBtn.textContent = "I'll wear this";
+  logBtn.className = "log-btn";
+
+  document.getElementById("screen-input").classList.remove("active");
+  document.getElementById("screen-result").style.display = "block";
+  document.getElementById("screen-result").classList.add("active");
+  renderWorn();
+  window.scrollTo(0, 0);
+}
+
+function tryAnother() {
+  const temp = Number(document.getElementById("inp-temp").value);
+  const high = Number(document.getElementById("inp-high").value);
+  const newAvoid = [...extraAvoid, lastOutfit.top, lastOutfit.bottom].filter(Boolean);
+  const avoidSet = new Set([...worn, ...newAvoid]);
+  lastOutfit = buildOutfit(temp, high, selectedCond, avoidSet);
+  extraAvoid = newAvoid;
+  showResult(temp, high);
+}
+
+function logWorn() {
+  if (!lastOutfit) return;
+  const items = [lastOutfit.top, lastOutfit.layer, lastOutfit.bottom, lastOutfit.shoes].filter(Boolean);
+  worn = [...new Set([...items, ...worn])].slice(0, 15);
+  localStorage.setItem("worn", JSON.stringify(worn));
+  const btn = document.getElementById("log-btn");
+  btn.textContent = "✓ Logged";
+  btn.className = "log-btn logged";
+  renderWorn();
+}
+
+function showInput() {
+  document.getElementById("screen-result").style.display = "none";
+  document.getElementById("screen-result").classList.remove("active");
+  document.getElementById("screen-input").classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+function clearWorn() {
+  worn = [];
+  localStorage.removeItem("worn");
+  renderWorn();
+}
+
+function renderWorn() {
+  const sec = document.getElementById("worn-section");
+  const tags = document.getElementById("worn-tags");
+  if (worn.length === 0) { sec.style.display = "none"; return; }
+  sec.style.display = "block";
+  tags.innerHTML = worn.map(w => `<span class="tag">${w}</span>`).join("");
+}
+
+renderWorn();
+</script>
+</body>
+</html>
