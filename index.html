@@ -57,7 +57,13 @@
     .tag { font-size: 11px; color: #444; background: #161616; border: 1px solid #1f1f1f; border-radius: 20px; padding: 4px 10px; }
     .clear-btn { margin-top: 12px; background: none; border: none; color: #333; font-size: 11px; cursor: pointer; letter-spacing: 0.1em; font-family: 'Georgia', serif; }
 
-    .screen { display: none; }
+    .select-group { margin-bottom: 16px; }
+    select { width: 100%; padding: 12px 14px; background: #111; border: 1px solid #2a2a2a; border-radius: 10px; color: #f0ece4; font-size: 14px; font-family: 'Georgia', serif; -webkit-appearance: none; appearance: none; cursor: pointer; }
+    select:focus { outline: none; border-color: #555; }
+    .select-wrap { position: relative; }
+    .select-wrap::after { content: "↓"; position: absolute; right: 14px; top: 50%; transform: translateY(-50%); color: #555; font-size: 12px; pointer-events: none; }
+    .link-btn { width: 100%; margin-top: 12px; padding: 10px; background: none; color: #555; border: none; font-size: 12px; cursor: pointer; font-family: 'Georgia', serif; letter-spacing: 0.05em; }
+    .link-btn:hover { color: #888; }
     .screen.active { display: block; width: 100%; max-width: 380px; }
     #screen-result { display: none; }
     #screen-result.active { display: block; width: 100%; }
@@ -91,8 +97,51 @@
     <span class="field-label">Condition</span>
     <div class="chips" id="chips"></div>
     <button class="main-btn" id="go-btn" onclick="generateOutfit()">Get My Outfit</button>
+    <button class="link-btn" onclick="showManualLog()">+ Log what I actually wore</button>
   </div>
 </div>
+
+<!-- MANUAL LOG SCREEN -->
+<div id="screen-log" class="screen">
+  <div class="card">
+    <span class="section-label">Log Today's Outfit</span>
+    <div class="select-group">
+      <span class="field-label">Top</span>
+      <div class="select-wrap">
+        <select id="log-top">
+          <option value="">— select —</option>
+        </select>
+      </div>
+    </div>
+    <div class="select-group">
+      <span class="field-label">Layer (optional)</span>
+      <div class="select-wrap">
+        <select id="log-layer">
+          <option value="">— none —</option>
+        </select>
+      </div>
+    </div>
+    <div class="select-group">
+      <span class="field-label">Bottom</span>
+      <div class="select-wrap">
+        <select id="log-bottom">
+          <option value="">— select —</option>
+        </select>
+      </div>
+    </div>
+    <div class="select-group">
+      <span class="field-label">Shoes</span>
+      <div class="select-wrap">
+        <select id="log-shoes">
+          <option value="">— select —</option>
+          <option>white sneakers</option>
+          <option>Blundstones</option>
+        </select>
+      </div>
+    </div>
+    <button class="main-btn" onclick="saveManualLog()" style="margin-top:8px">Save to History</button>
+    <button class="back-btn" onclick="showInput()">← Back</button>
+  </div>
 
 <!-- RESULT SCREEN -->
 <div id="screen-result">
@@ -453,8 +502,57 @@ function logWorn() {
 function showInput() {
   document.getElementById("screen-result").style.display = "none";
   document.getElementById("screen-result").classList.remove("active");
+  document.getElementById("screen-log").classList.remove("active");
   document.getElementById("screen-input").classList.add("active");
   window.scrollTo(0, 0);
+}
+
+function showManualLog() {
+  // Populate dropdowns
+  const allTops = [...W.tees, ...W.ls, ...W.ss];
+  const allLayers = W.layers;
+  const allBottoms = [...W.chinos, ...W.jeans, ...W.shorts];
+
+  const topSel = document.getElementById("log-top");
+  const layerSel = document.getElementById("log-layer");
+  const bottomSel = document.getElementById("log-bottom");
+
+  topSel.innerHTML = '<option value="">— select —</option>' + allTops.map(i => `<option>${i}</option>`).join("");
+  layerSel.innerHTML = '<option value="">— none —</option>' + allLayers.map(i => `<option>${i}</option>`).join("");
+  bottomSel.innerHTML = '<option value="">— select —</option>' + allBottoms.map(i => `<option>${i}</option>`).join("");
+
+  document.getElementById("screen-input").classList.remove("active");
+  document.getElementById("screen-log").classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+function saveManualLog() {
+  const top = document.getElementById("log-top").value;
+  const layer = document.getElementById("log-layer").value;
+  const bottom = document.getElementById("log-bottom").value;
+  const shoes = document.getElementById("log-shoes").value;
+
+  if (!top || !bottom || !shoes) {
+    alert("Please select at least a top, bottom, and shoes.");
+    return;
+  }
+
+  const items = [top, layer, bottom, shoes].filter(Boolean);
+  worn = [...new Set([...items, ...worn])].slice(0, 15);
+  localStorage.setItem("worn", JSON.stringify(worn));
+  renderWorn();
+
+  // Show confirmation then go back
+  const btn = document.querySelector("#screen-log .main-btn");
+  btn.textContent = "✓ Saved!";
+  btn.style.background = "#1a2a1a";
+  btn.style.color = "#4a8a4a";
+  setTimeout(() => {
+    btn.textContent = "Save to History";
+    btn.style.background = "";
+    btn.style.color = "";
+    showInput();
+  }, 1200);
 }
 
 function clearWorn() {
