@@ -158,11 +158,42 @@ CONDITIONS.forEach(c => {
   chipsEl.appendChild(b);
 });
 
-// ── Outfit logic ──────────────────────────────────────────────────────────────
+// ── Style compatibility ───────────────────────────────────────────────────────
+// Layers that work as casual overshirts (over a tee)
+const CASUAL_LAYERS = ["olive shirt jacket","denim shirt jacket","tan Gap shirt jacket","multicolor flannel overshirt"];
+// Layers that are outerwear/weather layers (over anything)
+const WEATHER_LAYERS = ["dark North Face zip-up","black windbreaker"];
+// Blazer only pairs with chinos, never shorts or hoodies
+const SMART_LAYERS = ["brown blazer"];
+
+// Tops that should NOT go under a blazer
+const NO_BLAZER_TOPS = ["black pullover hoodie","gray crewneck sweatshirt","dark LS flannel"];
+// Tops that should NOT go under casual shirt jackets (too bulky)
+const NO_SHIRT_JACKET_TOPS = ["gray crewneck sweatshirt","black pullover hoodie"];
+
 function pick(arr, avoid) {
-  // Shuffle randomly each call
-  const a = [...arr].sort(() => Math.random() - 0.5);
-  return a.find(x => !avoid.has(x)) || a[0];
+  const a = [...arr].filter(x => !avoid.has(x));
+  if (a.length === 0) return arr[Math.floor(Math.random() * arr.length)];
+  return a[Math.floor(Math.random() * a.length)];
+}
+
+function pickLayer(allowedTypes, top, bottom, avoidSet) {
+  let pool = [];
+  if (allowedTypes.includes("casual")) pool = [...pool, ...CASUAL_LAYERS];
+  if (allowedTypes.includes("weather")) pool = [...pool, ...WEATHER_LAYERS];
+  if (allowedTypes.includes("smart")) {
+    // Only add blazer if top and bottom are compatible
+    const noBlazerTop = NO_BLAZER_TOPS.includes(top);
+    const shortsBottom = bottom && bottom.includes("shorts");
+    if (!noBlazerTop && !shortsBottom) pool = [...pool, ...SMART_LAYERS];
+  }
+  // Remove shirt jackets if top is too bulky
+  if (NO_SHIRT_JACKET_TOPS.includes(top)) {
+    pool = pool.filter(l => !CASUAL_LAYERS.includes(l));
+    // Add weather layers as fallback
+    pool = [...pool, ...WEATHER_LAYERS];
+  }
+  return pick(pool, avoidSet) || null;
 }
 
 function buildOutfit(temp, high, cond, avoidSet) {
@@ -172,45 +203,71 @@ function buildOutfit(temp, high, cond, avoidSet) {
 
   let bottom, top, layer = null, vibe, why;
 
-  // Bottoms
-  if (high >= 78 && !isRainy) bottom = pick([...W.shorts, ...W.chinos], avoidSet);
-  else if (temp < 65) bottom = pick([...W.jeans, ...W.chinos], avoidSet);
-  else bottom = pick([...W.chinos, ...W.jeans], avoidSet);
-
-  // Tops + layers
-  if (temp < 55) {
-    top = pick(W.ls, avoidSet);
-    layer = pick(W.layers, avoidSet);
-    vibe = "Bundle up";
-    why = `At ${temp}°F it's cold — a long sleeve with a layer is the move.`;
-  } else if (temp < 65 && isWindy) {
-    top = pick([...W.tees, ...W.ls], avoidSet);
-    layer = pick(W.layers.filter(l => l !== "brown blazer"), avoidSet);
-    vibe = "Cool & breezy";
-    why = `${temp}°F with wind makes it feel colder — a layer you can peel off is key.`;
+  // ── Bottoms ──
+  if (high >= 78 && !isRainy) {
+    bottom = pick([...W.shorts, ...W.chinos], avoidSet);
   } else if (temp < 65) {
+    bottom = pick([...W.jeans, ...W.chinos], avoidSet);
+  } else {
+    bottom = pick([...W.chinos, ...W.jeans], avoidSet);
+  }
+
+  const hasShorts = bottom && bottom.includes("shorts");
+
+  // ── Tops + layers ──
+  if (temp < 55) {
+    // Cold: long sleeve base, casual or weather layer
+    top = pick([...W.ls.filter(t => !["gray crewneck sweatshirt","black pullover hoodie"].includes(t))], avoidSet)
+       || pick(W.ls, avoidSet);
+    layer = pickLayer(["casual","weather"], top, bottom, avoidSet);
+    vibe = "Bundle up";
+    why = `At ${temp}°F it's cold — a long sleeve with a layer keeps you warm.`;
+
+  } else if (temp < 65 && isWindy) {
+    // Cool + windy: tee or long sleeve, casual or weather layer
+    top = pick([...W.tees, ...W.ls], avoidSet);
+    layer = pickLayer(["casual","weather"], top, bottom, avoidSet);
+    vibe = "Cool & breezy";
+    why = `${temp}°F with wind feels colder — an open layer lets you adjust throughout the day.`;
+
+  } else if (temp < 65) {
+    // Cool: long sleeve, maybe a layer if staying cool
     top = pick(W.ls, avoidSet);
-    if (high < 72) layer = pick(W.layers, avoidSet);
+    if (high < 72) {
+      layer = pickLayer(["casual"], top, bottom, avoidSet);
+    }
     vibe = "Cool morning";
-    why = `${temp}°F now but climbing to ${high}°F — a long sleeve handles both ends.`;
+    why = `${temp}°F now climbing to ${high}°F — a long sleeve handles both ends of the day.`;
+
   } else if (temp < 75 && (isWindy || cond === "Cloudy" || cond === "Partly cloudy")) {
+    // Warm but layerable: tee + casual overshirt
     top = pick([...W.tees, ...W.ss], avoidSet);
-    layer = pick(W.layers.filter(l => !["dark North Face zip-up","brown blazer"].includes(l)), avoidSet);
+    if (!hasShorts) {
+      layer = pickLayer(["casual","smart"], top, bottom, avoidSet);
+    }
     vibe = "Warm with a breeze";
-    why = `Nice at ${temp}°F but the ${cond.toLowerCase()} calls for a light open layer.`;
+    why = `${temp}°F with ${cond.toLowerCase()} — a light open layer over a tee is the right call.`;
+
   } else if (temp < 75) {
+    // Warm + clear: tee or short sleeve, no layer needed
     top = pick([...W.tees, ...W.ss], avoidSet);
     vibe = "Nice out";
     why = `${temp}°F heading to ${high}°F — a tee or short sleeve is all you need.`;
+
   } else {
+    // Hot: keep it light
     top = pick([...W.tees, ...W.ss], avoidSet);
-    vibe = `Warm — ${high}°F high`;
+    vibe = `Warm day`;
     why = `At ${temp}°F heading to ${high}°F, keep it light and breathable.`;
   }
 
   if (isRainy) {
     vibe = "Rainy day";
     why += " Blundstones for the wet.";
+    // Swap casual layer for weather layer if raining
+    if (layer && CASUAL_LAYERS.includes(layer)) {
+      layer = pickLayer(["weather"], top, bottom, avoidSet) || layer;
+    }
   }
 
   return { top, layer, bottom, shoes, vibe, why };
