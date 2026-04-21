@@ -133,6 +133,7 @@ let selectedCond = "Sunny";
 let worn = JSON.parse(localStorage.getItem("worn") || "[]");
 let lastOutfit = null;
 let extraAvoid = [];
+let attempt = 0;
 
 // ── Build chips ───────────────────────────────────────────────────────────────
 function icon(c) {
@@ -159,21 +160,36 @@ CONDITIONS.forEach(c => {
 });
 
 // ── Outfit logic ──────────────────────────────────────────────────────────────
-function shuffle(arr) {
+// Seeded random based on today's date so picks rotate daily
+function seededRandom(seed) {
+  let s = seed;
+  return function() {
+    s = (s * 1664525 + 1013904223) & 0xffffffff;
+    return (s >>> 0) / 0xffffffff;
+  };
+}
+function dateSeed(salt) {
+  const d = new Date();
+  return d.getFullYear() * 10000 + (d.getMonth() + 1) * 100 + d.getDate() + salt;
+}
+function seededShuffle(arr, salt) {
   const a = [...arr];
+  const rand = seededRandom(dateSeed(salt));
   for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
+    const j = Math.floor(rand() * (i + 1));
     [a[i], a[j]] = [a[j], a[i]];
   }
   return a;
 }
-
+let pickSalt = 0;
 function pick(arr, avoid) {
-  const available = shuffle(arr).filter(x => !avoid.has(x));
-  return available[0] || arr[Math.floor(Math.random() * arr.length)];
+  pickSalt += 37;
+  const shuffled = seededShuffle(arr, pickSalt);
+  return shuffled.find(x => !avoid.has(x)) || shuffled[0];
 }
 
-function buildOutfit(temp, high, cond, avoidSet) {
+function buildOutfit(temp, high, cond, avoidSet, attempt) {
+  pickSalt = (attempt || 0) * 1000;
   const isRainy = ["Rainy","Thunderstorms","Chance of rain"].includes(cond);
   const isWindy = cond === "Windy";
   const shoes = isRainy ? "Blundstones" : "white sneakers";
@@ -231,7 +247,7 @@ function generateOutfit(avoid = []) {
   if (!temp || !high) return;
 
   const avoidSet = new Set([...worn, ...avoid]);
-  lastOutfit = buildOutfit(temp, high, selectedCond, avoidSet);
+  lastOutfit = buildOutfit(temp, high, selectedCond, avoidSet, attempt);
   extraAvoid = avoid;
   showResult(temp, high);
 }
@@ -268,11 +284,12 @@ function showResult(temp, high) {
 }
 
 function tryAnother() {
+  attempt++;
   const temp = Number(document.getElementById("inp-temp").value);
   const high = Number(document.getElementById("inp-high").value);
-  const newAvoid = [...extraAvoid, lastOutfit.top, lastOutfit.bottom].filter(Boolean);
+  const newAvoid = [...extraAvoid, lastOutfit.top, lastOutfit.bottom, lastOutfit.layer].filter(Boolean);
   const avoidSet = new Set([...worn, ...newAvoid]);
-  lastOutfit = buildOutfit(temp, high, selectedCond, avoidSet);
+  lastOutfit = buildOutfit(temp, high, selectedCond, avoidSet, attempt);
   extraAvoid = newAvoid;
   showResult(temp, high);
 }
