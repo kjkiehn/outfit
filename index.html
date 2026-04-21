@@ -292,6 +292,17 @@ function buildOutfit(temp, high, cond, avoidSet) {
   const isRainy = ["Rainy","Thunderstorms","Chance of rain"].includes(cond);
   const isWindy = cond === "Windy";
   const shoes = isRainy ? "Blundstones" : "white sneakers";
+  const swing = high - temp; // temperature swing during the day
+
+  // Swing thresholds:
+  // big swing (15°+): need an easily removable layer, NOT a pullover/hoodie
+  // medium swing (8-14°): a layer is helpful but can be any type
+  // small swing (<8°): dress for current temp, layer optional
+  const bigSwing = swing >= 15;
+  const medSwing = swing >= 8 && swing < 15;
+
+  // Items that can't be easily removed (pullovers = stuck with them)
+  const STUCK_TOPS = ["gray crewneck sweatshirt","black pullover hoodie"];
 
   let bottom, top, layer = null, vibe, why;
 
@@ -306,13 +317,29 @@ function buildOutfit(temp, high, cond, avoidSet) {
 
   const hasShorts = bottom && bottom.includes("shorts");
 
-  // ── Tops + layers — pick top after bottom so colors can coordinate ──
+  // ── Tops + layers ──
   if (temp < 55) {
-    top = pick([...W.ls.filter(t => !["gray crewneck sweatshirt","black pullover hoodie"].includes(t))], avoidSet, bottom)
-       || pick(W.ls, avoidSet, bottom);
+    if (bigSwing) {
+      // Cold now, warming up a lot — tee base + removable layer (not a pullover)
+      top = pick(W.tees, avoidSet, bottom);
+      layer = pickLayer(["casual","weather"], top, bottom, avoidSet);
+      vibe = "Cold now, warming later";
+      why = `${temp}°F now but hitting ${high}°F — a tee with an open layer you can remove is smarter than a pullover.`;
+    } else {
+      // Cold with small/no swing — long sleeve is fine
+      top = pick(W.ls.filter(t => !STUCK_TOPS.includes(t)), avoidSet, bottom)
+         || pick(W.ls, avoidSet, bottom);
+      layer = pickLayer(["casual","weather"], top, bottom, avoidSet);
+      vibe = "Bundle up";
+      why = `At ${temp}°F with a high of only ${high}°F, staying warm all day is the priority.`;
+    }
+
+  } else if (temp < 65 && bigSwing) {
+    // Cool now, noticeably warmer later — avoid pullovers, use open layer over tee
+    top = pick(W.tees, avoidSet, bottom);
     layer = pickLayer(["casual","weather"], top, bottom, avoidSet);
-    vibe = "Bundle up";
-    why = `At ${temp}°F it's cold — a long sleeve with a layer keeps you warm.`;
+    vibe = "Cool now, warm later";
+    why = `${temp}°F now climbing to ${high}°F — a tee with an open layer you can ditch by afternoon is the move.`;
 
   } else if (temp < 65 && isWindy) {
     top = pick([...W.tees, ...W.ls], avoidSet, bottom);
