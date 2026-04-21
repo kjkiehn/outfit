@@ -159,8 +159,18 @@ CONDITIONS.forEach(c => {
 });
 
 // ── Outfit logic ──────────────────────────────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
 function pick(arr, avoid) {
-  return arr.find(x => !avoid.has(x)) || arr[Math.floor(Math.random() * arr.length)];
+  const available = shuffle(arr).filter(x => !avoid.has(x));
+  return available[0] || arr[Math.floor(Math.random() * arr.length)];
 }
 
 function buildOutfit(temp, high, cond, avoidSet) {
