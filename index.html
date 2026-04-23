@@ -82,7 +82,7 @@
 <div class="header">
   <div class="sub">Bentonville, AR</div>
   <h1>What to Wear</h1>
-  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v6</div>
+  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v7</div>
 </div>
 
 <!-- INPUT SCREEN -->
@@ -102,7 +102,38 @@
     <span class="field-label">Condition</span>
     <div class="chips" id="chips"></div>
     <button class="main-btn" id="go-btn" onclick="generateOutfit()">Get My Outfit</button>
+    <button class="link-btn" onclick="showAnchor()">🎯 Start with a specific item</button>
     <button class="link-btn" onclick="showManualLog()">+ Log what I actually wore</button>
+  </div>
+</div>
+
+<!-- ANCHOR SCREEN -->
+<div id="screen-anchor" class="screen">
+  <div class="card">
+    <span class="section-label">Start With One Item</span>
+    <div class="select-group">
+      <span class="field-label">I want to wear...</span>
+      <div class="select-wrap">
+        <select id="anchor-category" onchange="updateAnchorItems()">
+          <option value="">— choose category —</option>
+          <option value="top">A top / long sleeve</option>
+          <option value="ss">A short sleeve</option>
+          <option value="tee">A tee</option>
+          <option value="layer">A layer / jacket</option>
+          <option value="bottom">Bottoms</option>
+        </select>
+      </div>
+    </div>
+    <div class="select-group" id="anchor-item-group" style="display:none">
+      <span class="field-label">Specifically...</span>
+      <div class="select-wrap">
+        <select id="anchor-item">
+          <option value="">— select item —</option>
+        </select>
+      </div>
+    </div>
+    <button class="main-btn" id="anchor-go-btn" onclick="generateWithAnchor()" style="opacity:0.4;cursor:not-allowed" disabled>Build Outfit Around This</button>
+    <button class="back-btn" onclick="showInput()">← Back</button>
   </div>
 </div>
 
@@ -505,10 +536,141 @@ function logWorn() {
   renderWorn();
 }
 
+function showAnchor() {
+  document.getElementById("screen-input").classList.remove("active");
+  document.getElementById("screen-anchor").classList.add("active");
+  window.scrollTo(0, 0);
+}
+
+function updateAnchorItems() {
+  const cat = document.getElementById("anchor-category").value;
+  const itemSel = document.getElementById("anchor-item");
+  const group = document.getElementById("anchor-item-group");
+  const goBtn = document.getElementById("anchor-go-btn");
+
+  const map = {
+    top: W.ls,
+    ss: W.ss,
+    tee: W.tees,
+    layer: W.layers,
+    bottom: [...W.chinos, ...W.jeans, ...W.shorts],
+  };
+
+  if (!cat) { group.style.display = "none"; return; }
+  group.style.display = "block";
+  itemSel.innerHTML = '<option value="">— select item —</option>' +
+    (map[cat] || []).map(i => `<option>${i}</option>`).join("");
+  goBtn.disabled = true;
+  goBtn.style.opacity = "0.4";
+  goBtn.style.cursor = "not-allowed";
+
+  itemSel.onchange = () => {
+    const hasItem = !!itemSel.value;
+    goBtn.disabled = !hasItem;
+    goBtn.style.opacity = hasItem ? "1" : "0.4";
+    goBtn.style.cursor = hasItem ? "pointer" : "not-allowed";
+  };
+}
+
+function generateWithAnchor() {
+  const temp = Number(document.getElementById("inp-temp").value);
+  const high = Number(document.getElementById("inp-high").value);
+  if (!temp || !high) {
+    alert("Go back and enter today's temperature first.");
+    return;
+  }
+
+  const cat = document.getElementById("anchor-category").value;
+  const anchorItem = document.getElementById("anchor-item").value;
+  if (!anchorItem) return;
+
+  const avoidSet = new Set(worn);
+  const isRainy = ["Rainy","Thunderstorms","Chance of rain"].includes(selectedCond);
+  const swing = high - temp;
+  const bigSwing = swing >= 15;
+
+  let top = null, layer = null, bottom = null, shoes, vibe, why;
+
+  shoes = isRainy ? "Blundstones" : "white sneakers";
+
+  // Lock in the anchor item in the right slot
+  if (cat === "top" || cat === "ss" || cat === "tee") {
+    top = anchorItem;
+    // Pick bottom that works with this top's color
+    if (high >= 78 && !isRainy) bottom = pick([...W.shorts, ...W.chinos], avoidSet, top);
+    else if (temp < 65) bottom = pick([...W.jeans, ...W.chinos], avoidSet, top);
+    else bottom = pick([...W.chinos, ...W.jeans], avoidSet, top);
+    // Add layer if temp calls for it
+    if (temp < 65 && cat === "tee") {
+      layer = pickLayer(["casual","weather"], top, bottom, avoidSet);
+    } else if (temp < 55) {
+      layer = pickLayer(["casual","weather"], top, bottom, avoidSet);
+    } else if (temp < 75 && (selectedCond === "Cloudy" || selectedCond === "Partly cloudy" || selectedCond === "Windy")) {
+      layer = pickLayer(["casual","smart"], top, bottom, avoidSet);
+    }
+
+  } else if (cat === "layer") {
+    layer = anchorItem;
+    // Pick top that works under this layer
+    const noShirtJacket = ["gray crewneck sweatshirt","black pullover hoodie"];
+    if (CASUAL_LAYERS.includes(anchorItem)) {
+      top = pick([...W.tees, ...W.ss, ...W.ls.filter(t => !noShirtJacket.includes(t))], avoidSet, anchorItem);
+    } else {
+      top = pick([...W.tees, ...W.ls], avoidSet, anchorItem);
+    }
+    if (high >= 78 && !isRainy) bottom = pick([...W.shorts, ...W.chinos], avoidSet, anchorItem);
+    else if (temp < 65) bottom = pick([...W.jeans, ...W.chinos], avoidSet, anchorItem);
+    else bottom = pick([...W.chinos, ...W.jeans], avoidSet, anchorItem);
+
+  } else if (cat === "bottom") {
+    bottom = anchorItem;
+    const hasShorts = anchorItem.includes("shorts");
+    // Pick top that works with this bottom's color
+    if (temp < 55) {
+      top = bigSwing
+        ? pick(W.tees, avoidSet, bottom)
+        : pick(W.ls, avoidSet, bottom);
+      layer = pickLayer(["casual","weather"], top, bottom, avoidSet);
+    } else if (temp < 65) {
+      top = bigSwing ? pick(W.tees, avoidSet, bottom) : pick(W.ls, avoidSet, bottom);
+      if (!bigSwing && high < 72) layer = pickLayer(["casual"], top, bottom, avoidSet);
+      else if (bigSwing) layer = pickLayer(["casual","weather"], top, bottom, avoidSet);
+    } else if (temp < 75 && !hasShorts) {
+      top = pick([...W.tees, ...W.ss], avoidSet, bottom);
+      if (selectedCond === "Cloudy" || selectedCond === "Partly cloudy" || selectedCond === "Windy") {
+        layer = pickLayer(["casual","smart"], top, bottom, avoidSet);
+      }
+    } else {
+      top = pick([...W.tees, ...W.ss], avoidSet, bottom);
+    }
+    // Blazer only with chinos, not shorts or jeans
+    if (layer === "brown blazer" && (hasShorts || anchorItem.includes("jeans"))) {
+      layer = pickLayer(["casual"], top, bottom, avoidSet);
+    }
+  }
+
+  // Rain override for layer
+  if (isRainy && layer && CASUAL_LAYERS.includes(layer)) {
+    layer = pickLayer(["weather"], top, bottom, avoidSet) || layer;
+  }
+  if (isRainy) shoes = "Blundstones";
+
+  vibe = `Built around: ${anchorItem}`;
+  why = `Starting with your ${anchorItem} — `;
+  if (bigSwing) why += `big temp swing today (${temp}° → ${high}°) so the rest is picked to layer easily.`;
+  else why += `the rest is picked to complement it for ${temp}°F heading to ${high}°F.`;
+
+  lastOutfit = { top, layer, bottom, shoes, vibe, why };
+  extraAvoid = [];
+  document.getElementById("screen-anchor").classList.remove("active");
+  showResult(temp, high);
+}
+
 function showInput() {
   document.getElementById("screen-result").style.display = "none";
   document.getElementById("screen-result").classList.remove("active");
   document.getElementById("screen-log").classList.remove("active");
+  document.getElementById("screen-anchor").classList.remove("active");
   document.getElementById("screen-input").classList.add("active");
   window.scrollTo(0, 0);
 }
