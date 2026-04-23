@@ -82,7 +82,7 @@
 <div class="header">
   <div class="sub">Bentonville, AR</div>
   <h1>What to Wear</h1>
-  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v7</div>
+  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v8</div>
 </div>
 
 <!-- INPUT SCREEN -->
@@ -218,6 +218,8 @@ let selectedCond = "Sunny";
 let worn = JSON.parse(localStorage.getItem("worn") || "[]");
 let lastOutfit = null;
 let extraAvoid = [];
+let anchorItem = null;
+let anchorCat = null;
 
 // ── Build chips ───────────────────────────────────────────────────────────────
 function icon(c) {
@@ -479,6 +481,8 @@ function generateOutfit(avoid = []) {
   if (!temp || !high) return;
 
   const avoidSet = new Set([...worn, ...avoid]);
+  anchorItem = null;
+  anchorCat = null;
   lastOutfit = buildOutfit(temp, high, selectedCond, avoidSet);
   extraAvoid = avoid;
   showResult(temp, high);
@@ -518,10 +522,18 @@ function showResult(temp, high) {
 function tryAnother() {
   const temp = Number(document.getElementById("inp-temp").value);
   const high = Number(document.getElementById("inp-high").value);
+  // Add last suggestion's non-anchor items to avoid list so we get something different
   const newAvoid = [...extraAvoid, lastOutfit.top, lastOutfit.bottom, lastOutfit.layer].filter(Boolean);
-  const avoidSet = new Set([...worn, ...newAvoid]);
-  lastOutfit = buildOutfit(temp, high, selectedCond, avoidSet);
   extraAvoid = newAvoid;
+
+  if (anchorItem && anchorCat) {
+    // Re-run anchor logic, keeping the anchor locked in and avoiding previous picks
+    const avoidSet = new Set([...worn, ...newAvoid.filter(i => i !== anchorItem)]);
+    buildAnchorOutfit(temp, high, anchorItem, anchorCat, avoidSet);
+  } else {
+    const avoidSet = new Set([...worn, ...newAvoid]);
+    lastOutfit = buildOutfit(temp, high, selectedCond, avoidSet);
+  }
   showResult(temp, high);
 }
 
@@ -579,91 +591,88 @@ function generateWithAnchor() {
     alert("Go back and enter today's temperature first.");
     return;
   }
-
   const cat = document.getElementById("anchor-category").value;
-  const anchorItem = document.getElementById("anchor-item").value;
-  if (!anchorItem) return;
+  const item = document.getElementById("anchor-item").value;
+  if (!item) return;
+
+  // Store anchor so tryAnother can keep it locked
+  anchorItem = item;
+  anchorCat = cat;
+  extraAvoid = [];
 
   const avoidSet = new Set(worn);
+  buildAnchorOutfit(temp, high, item, cat, avoidSet);
+  document.getElementById("screen-anchor").classList.remove("active");
+  showResult(temp, high);
+}
+
+function buildAnchorOutfit(temp, high, item, cat, avoidSet) {
   const isRainy = ["Rainy","Thunderstorms","Chance of rain"].includes(selectedCond);
   const swing = high - temp;
   const bigSwing = swing >= 15;
 
-  let top = null, layer = null, bottom = null, shoes, vibe, why;
+  let top = null, layer = null, bottom = null;
+  let shoes = isRainy ? "Blundstones" : "white sneakers";
 
-  shoes = isRainy ? "Blundstones" : "white sneakers";
+  // Always exclude the anchor item from the avoid set so it's never filtered out
+  const avoidWithoutAnchor = new Set([...avoidSet].filter(i => i !== item));
 
-  // Lock in the anchor item in the right slot
   if (cat === "top" || cat === "ss" || cat === "tee") {
-    top = anchorItem;
-    // Pick bottom that works with this top's color
-    if (high >= 78 && !isRainy) bottom = pick([...W.shorts, ...W.chinos], avoidSet, top);
-    else if (temp < 65) bottom = pick([...W.jeans, ...W.chinos], avoidSet, top);
-    else bottom = pick([...W.chinos, ...W.jeans], avoidSet, top);
-    // Add layer if temp calls for it
-    if (temp < 65 && cat === "tee") {
-      layer = pickLayer(["casual","weather"], top, bottom, avoidSet);
-    } else if (temp < 55) {
-      layer = pickLayer(["casual","weather"], top, bottom, avoidSet);
+    top = item;
+    if (high >= 78 && !isRainy) bottom = pick([...W.shorts, ...W.chinos], avoidWithoutAnchor, top);
+    else if (temp < 65) bottom = pick([...W.jeans, ...W.chinos], avoidWithoutAnchor, top);
+    else bottom = pick([...W.chinos, ...W.jeans], avoidWithoutAnchor, top);
+    if (temp < 65 || temp < 55) {
+      layer = pickLayer(["casual","weather"], top, bottom, avoidWithoutAnchor);
     } else if (temp < 75 && (selectedCond === "Cloudy" || selectedCond === "Partly cloudy" || selectedCond === "Windy")) {
-      layer = pickLayer(["casual","smart"], top, bottom, avoidSet);
+      layer = pickLayer(["casual","smart"], top, bottom, avoidWithoutAnchor);
     }
 
   } else if (cat === "layer") {
-    layer = anchorItem;
-    // Pick top that works under this layer
+    layer = item;
     const noShirtJacket = ["gray crewneck sweatshirt","black pullover hoodie"];
-    if (CASUAL_LAYERS.includes(anchorItem)) {
-      top = pick([...W.tees, ...W.ss, ...W.ls.filter(t => !noShirtJacket.includes(t))], avoidSet, anchorItem);
+    if (CASUAL_LAYERS.includes(item)) {
+      top = pick([...W.tees, ...W.ss, ...W.ls.filter(t => !noShirtJacket.includes(t))], avoidWithoutAnchor, item);
     } else {
-      top = pick([...W.tees, ...W.ls], avoidSet, anchorItem);
+      top = pick([...W.tees, ...W.ls], avoidWithoutAnchor, item);
     }
-    if (high >= 78 && !isRainy) bottom = pick([...W.shorts, ...W.chinos], avoidSet, anchorItem);
-    else if (temp < 65) bottom = pick([...W.jeans, ...W.chinos], avoidSet, anchorItem);
-    else bottom = pick([...W.chinos, ...W.jeans], avoidSet, anchorItem);
+    if (high >= 78 && !isRainy) bottom = pick([...W.shorts, ...W.chinos], avoidWithoutAnchor, item);
+    else if (temp < 65) bottom = pick([...W.jeans, ...W.chinos], avoidWithoutAnchor, item);
+    else bottom = pick([...W.chinos, ...W.jeans], avoidWithoutAnchor, item);
 
   } else if (cat === "bottom") {
-    bottom = anchorItem;
-    const hasShorts = anchorItem.includes("shorts");
-    // Pick top that works with this bottom's color
+    bottom = item;
+    const hasShorts = item.includes("shorts");
     if (temp < 55) {
-      top = bigSwing
-        ? pick(W.tees, avoidSet, bottom)
-        : pick(W.ls, avoidSet, bottom);
-      layer = pickLayer(["casual","weather"], top, bottom, avoidSet);
+      top = bigSwing ? pick(W.tees, avoidWithoutAnchor, bottom) : pick(W.ls, avoidWithoutAnchor, bottom);
+      layer = pickLayer(["casual","weather"], top, bottom, avoidWithoutAnchor);
     } else if (temp < 65) {
-      top = bigSwing ? pick(W.tees, avoidSet, bottom) : pick(W.ls, avoidSet, bottom);
-      if (!bigSwing && high < 72) layer = pickLayer(["casual"], top, bottom, avoidSet);
-      else if (bigSwing) layer = pickLayer(["casual","weather"], top, bottom, avoidSet);
+      top = bigSwing ? pick(W.tees, avoidWithoutAnchor, bottom) : pick(W.ls, avoidWithoutAnchor, bottom);
+      if (!bigSwing && high < 72) layer = pickLayer(["casual"], top, bottom, avoidWithoutAnchor);
+      else if (bigSwing) layer = pickLayer(["casual","weather"], top, bottom, avoidWithoutAnchor);
     } else if (temp < 75 && !hasShorts) {
-      top = pick([...W.tees, ...W.ss], avoidSet, bottom);
+      top = pick([...W.tees, ...W.ss], avoidWithoutAnchor, bottom);
       if (selectedCond === "Cloudy" || selectedCond === "Partly cloudy" || selectedCond === "Windy") {
-        layer = pickLayer(["casual","smart"], top, bottom, avoidSet);
+        layer = pickLayer(["casual","smart"], top, bottom, avoidWithoutAnchor);
       }
     } else {
-      top = pick([...W.tees, ...W.ss], avoidSet, bottom);
+      top = pick([...W.tees, ...W.ss], avoidWithoutAnchor, bottom);
     }
-    // Blazer only with chinos, not shorts or jeans
-    if (layer === "brown blazer" && (hasShorts || anchorItem.includes("jeans"))) {
-      layer = pickLayer(["casual"], top, bottom, avoidSet);
+    if (layer === "brown blazer" && (hasShorts || item.includes("jeans"))) {
+      layer = pickLayer(["casual"], top, bottom, avoidWithoutAnchor);
     }
   }
 
-  // Rain override for layer
   if (isRainy && layer && CASUAL_LAYERS.includes(layer)) {
-    layer = pickLayer(["weather"], top, bottom, avoidSet) || layer;
+    layer = pickLayer(["weather"], top, bottom, avoidWithoutAnchor) || layer;
   }
-  if (isRainy) shoes = "Blundstones";
 
-  vibe = `Built around: ${anchorItem}`;
-  why = `Starting with your ${anchorItem} — `;
-  if (bigSwing) why += `big temp swing today (${temp}° → ${high}°) so the rest is picked to layer easily.`;
-  else why += `the rest is picked to complement it for ${temp}°F heading to ${high}°F.`;
+  const vibe = `Built around: ${item}`;
+  const why = `Starting with your ${item} — ` +
+    (bigSwing ? `big temp swing today (${temp}° → ${high}°) so the rest layers easily.`
+               : `the rest complements it for ${temp}°F heading to ${high}°F.`);
 
   lastOutfit = { top, layer, bottom, shoes, vibe, why };
-  extraAvoid = [];
-  document.getElementById("screen-anchor").classList.remove("active");
-  showResult(temp, high);
 }
 
 function showInput() {
@@ -672,6 +681,8 @@ function showInput() {
   document.getElementById("screen-log").classList.remove("active");
   document.getElementById("screen-anchor").classList.remove("active");
   document.getElementById("screen-input").classList.add("active");
+  anchorItem = null;
+  anchorCat = null;
   window.scrollTo(0, 0);
 }
 
