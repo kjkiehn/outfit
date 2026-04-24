@@ -82,7 +82,7 @@
 <div class="header">
   <div class="sub">Bentonville, AR</div>
   <h1>What to Wear</h1>
-  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v8</div>
+  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v9</div>
 </div>
 
 <!-- INPUT SCREEN -->
@@ -293,19 +293,33 @@ const COLOR = {
   "khaki shorts": "earth",
 };
 
-// Color clash rules — these combinations look bad together
-const CLASHES = [
-  // Don't mix warm accent with earth accent (gold top + olive/tan bottom = muddy)
-  new Set(["warm","earth"]),
-  // Don't put a warm-toned layer over a cool-toned top (orange stripe under denim jacket = off)
-  // handled in pickCompatibleLayer
+// (clash logic moved to ITEM_CLASHES and colorsClash below)
+
+// Specific item-level clash pairs — things that look bad regardless of color family
+const ITEM_CLASHES = [
+  // Black + navy look like a mismatch, not intentional contrast
+  ["black tee", "navy chinos"],
+  ["black relaxed Henley", "navy chinos"],
+  ["black SS button-up", "navy chinos"],
+  ["black pullover hoodie", "navy chinos"],
+  ["black slim jeans", "navy chinos"], // black jeans + navy top is fine but navy pants + black top is off
+  ["black carpenter jeans", "navy chinos"],
+  // Denim on denim (top + bottom both denim)
+  ["denim SS button-up", "medium wash slim jeans"],
+  ["denim shirt jacket", "medium wash slim jeans"],
 ];
+
+// Check if two specific items clash
+function itemsClash(a, b) {
+  return ITEM_CLASHES.some(([x, y]) => (a === x && b === y) || (a === y && b === x));
+}
 
 function colorOf(item) {
   return COLOR[item] || "neutral";
 }
 
 function colorsClash(a, b) {
+  if (itemsClash(a, b)) return true;
   const ca = colorOf(a), cb = colorOf(b);
   // neutrals and multi patterns go with anything
   if (ca === "neutral" || cb === "neutral" || ca === "multi" || cb === "multi") return false;
@@ -317,10 +331,10 @@ function colorsClash(a, b) {
 }
 
 function threeWayClash(top, layer, bottom) {
-  // If top and bottom are both earth tones, layer should be neutral or cool
+  if (itemsClash(top, bottom) || itemsClash(top, layer) || itemsClash(layer, bottom)) return true;
   const ct = colorOf(top), cl = layer ? colorOf(layer) : "neutral", cb = colorOf(bottom);
-  if (ct === "earth" && cb === "earth" && cl === "earth") return true; // too much earth
-  if (ct === "cool" && cb === "cool" && cl === "cool") return false; // cool monochrome is fine
+  if (ct === "earth" && cb === "earth" && cl === "earth") return true;
+  if (ct === "cool" && cb === "cool" && cl === "cool") return false;
   if (ct === "warm" && cb === "earth") return true;
   if (ct === "earth" && cb === "warm") return true;
   return false;
