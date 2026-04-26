@@ -82,7 +82,7 @@
 <div class="header">
   <div class="sub">Bentonville, AR</div>
   <h1>What to Wear</h1>
-  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v9</div>
+  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v10</div>
 </div>
 
 <!-- INPUT SCREEN -->
@@ -210,6 +210,7 @@ const W = {
   layers: ["olive shirt jacket","denim shirt jacket","tan Gap shirt jacket","multicolor flannel overshirt","dark North Face zip-up","black windbreaker","brown blazer"],
   chinos: ["navy chinos","tan chinos"],
   jeans: ["black slim jeans","medium wash slim jeans","black carpenter jeans"],
+  pants: ["olive slim pants"],
   shorts: ["olive shorts","khaki shorts"],
 };
 
@@ -289,6 +290,7 @@ const COLOR = {
   "black slim jeans": "neutral",
   "medium wash slim jeans": "cool",
   "black carpenter jeans": "neutral",
+  "olive slim pants": "earth",
   "olive shorts": "earth",
   "khaki shorts": "earth",
 };
@@ -410,11 +412,11 @@ function buildOutfit(temp, high, cond, avoidSet) {
 
   // ── Bottoms ──
   if (high >= 78 && !isRainy) {
-    bottom = pick([...W.shorts, ...W.chinos], avoidSet);
+    bottom = pick([...W.shorts, ...W.chinos, ...W.pants], avoidSet);
   } else if (temp < 65) {
-    bottom = pick([...W.jeans, ...W.chinos], avoidSet);
+    bottom = pick([...W.jeans, ...W.chinos, ...W.pants], avoidSet);
   } else {
-    bottom = pick([...W.chinos, ...W.jeans], avoidSet);
+    bottom = pick([...W.chinos, ...W.jeans, ...W.pants], avoidSet);
   }
 
   const hasShorts = bottom && bottom.includes("shorts");
@@ -579,7 +581,7 @@ function updateAnchorItems() {
     ss: W.ss,
     tee: W.tees,
     layer: W.layers,
-    bottom: [...W.chinos, ...W.jeans, ...W.shorts],
+    bottom: [...W.chinos, ...W.jeans, ...W.shorts, ...W.pants],
   };
 
   if (!cat) { group.style.display = "none"; return; }
@@ -633,9 +635,9 @@ function buildAnchorOutfit(temp, high, item, cat, avoidSet) {
 
   if (cat === "top" || cat === "ss" || cat === "tee") {
     top = item;
-    if (high >= 78 && !isRainy) bottom = pick([...W.shorts, ...W.chinos], avoidWithoutAnchor, top);
-    else if (temp < 65) bottom = pick([...W.jeans, ...W.chinos], avoidWithoutAnchor, top);
-    else bottom = pick([...W.chinos, ...W.jeans], avoidWithoutAnchor, top);
+    if (high >= 78 && !isRainy) bottom = pick([...W.shorts, ...W.chinos, ...W.pants], avoidWithoutAnchor, top);
+    else if (temp < 65) bottom = pick([...W.jeans, ...W.chinos, ...W.pants], avoidWithoutAnchor, top);
+    else bottom = pick([...W.chinos, ...W.jeans, ...W.pants], avoidWithoutAnchor, top);
     if (temp < 65 || temp < 55) {
       layer = pickLayer(["casual","weather"], top, bottom, avoidWithoutAnchor);
     } else if (temp < 75 && (selectedCond === "Cloudy" || selectedCond === "Partly cloudy" || selectedCond === "Windy")) {
@@ -650,9 +652,9 @@ function buildAnchorOutfit(temp, high, item, cat, avoidSet) {
     } else {
       top = pick([...W.tees, ...W.ls], avoidWithoutAnchor, item);
     }
-    if (high >= 78 && !isRainy) bottom = pick([...W.shorts, ...W.chinos], avoidWithoutAnchor, item);
-    else if (temp < 65) bottom = pick([...W.jeans, ...W.chinos], avoidWithoutAnchor, item);
-    else bottom = pick([...W.chinos, ...W.jeans], avoidWithoutAnchor, item);
+    if (high >= 78 && !isRainy) bottom = pick([...W.shorts, ...W.chinos, ...W.pants], avoidWithoutAnchor, item);
+    else if (temp < 65) bottom = pick([...W.jeans, ...W.chinos, ...W.pants], avoidWithoutAnchor, item);
+    else bottom = pick([...W.chinos, ...W.jeans, ...W.pants], avoidWithoutAnchor, item);
 
   } else if (cat === "bottom") {
     bottom = item;
@@ -704,7 +706,7 @@ function showManualLog() {
   // Populate dropdowns
   const allTops = [...W.tees, ...W.ls, ...W.ss];
   const allLayers = W.layers;
-  const allBottoms = [...W.chinos, ...W.jeans, ...W.shorts];
+  const allBottoms = [...W.chinos, ...W.jeans, ...W.shorts, ...W.pants];
 
   const topSel = document.getElementById("log-top");
   const layerSel = document.getElementById("log-layer");
