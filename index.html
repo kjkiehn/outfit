@@ -82,7 +82,7 @@
 <div class="header">
   <div class="sub">Bentonville, AR</div>
   <h1>What to Wear</h1>
-  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v10</div>
+  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v11</div>
 </div>
 
 <!-- INPUT SCREEN -->
@@ -459,18 +459,18 @@ function buildOutfit(temp, high, cond, avoidSet) {
     vibe = "Cool morning";
     why = `${temp}°F now climbing to ${high}°F — a long sleeve handles both ends of the day.`;
 
-  } else if (temp < 75 && (isWindy || cond === "Cloudy" || cond === "Partly cloudy")) {
-    top = pick([...W.tees, ...W.ss], avoidSet, bottom);
+  } else if (temp < 75 && (isWindy || cond === "Cloudy" || cond === "Partly cloudy" || cond === "Chance of rain")) {
+    top = pick([...W.tees, ...W.ss, ...W.ls], avoidSet, bottom);
     if (!hasShorts) {
-      layer = pickLayer(["casual","smart"], top, bottom, avoidSet);
+      layer = pickLayer(["casual","weather"], top, bottom, avoidSet);
     }
     vibe = "Warm with a breeze";
     why = `${temp}°F with ${cond.toLowerCase()} — a light open layer over a tee is the right call.`;
 
   } else if (temp < 75) {
-    top = pick([...W.tees, ...W.ss], avoidSet, bottom);
+    top = pick([...W.tees, ...W.ss, ...W.ls], avoidSet, bottom);
     vibe = "Nice out";
-    why = `${temp}°F heading to ${high}°F — a tee or short sleeve is all you need.`;
+    why = `${temp}°F heading to ${high}°F — keep it casual.`;
 
   } else {
     top = pick([...W.tees, ...W.ss], avoidSet, bottom);
