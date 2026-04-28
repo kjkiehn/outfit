@@ -82,7 +82,7 @@
 <div class="header">
   <div class="sub">Bentonville, AR</div>
   <h1>What to Wear</h1>
-  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v11</div>
+  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v12</div>
 </div>
 
 <!-- INPUT SCREEN -->
@@ -357,13 +357,13 @@ const NO_BLAZER_TOPS = ["black pullover hoodie","gray crewneck sweatshirt","dark
 const NO_SHIRT_JACKET_TOPS = ["gray crewneck sweatshirt","black pullover hoodie"];
 
 function pick(arr, avoid, colorAnchor) {
-  // Filter out avoided items
+  // Start with non-avoided items
   let candidates = arr.filter(x => !avoid.has(x));
-  if (candidates.length === 0) candidates = [...arr];
-  // If we have a color anchor, prefer non-clashing items
-  if (colorAnchor) {
+  if (candidates.length === 0) candidates = [...arr]; // fallback: ignore avoid
+  // If color anchor provided, prefer non-clashing — but only as a preference, not a hard filter
+  if (colorAnchor && candidates.length > 1) {
     const good = candidates.filter(x => !colorsClash(x, colorAnchor));
-    if (good.length > 0) candidates = good;
+    if (good.length > 0) candidates = good; // only apply if it doesn't empty the pool
   }
   return candidates[Math.floor(Math.random() * candidates.length)];
 }
@@ -473,7 +473,10 @@ function buildOutfit(temp, high, cond, avoidSet) {
     why = `${temp}°F heading to ${high}°F — keep it casual.`;
 
   } else {
-    top = pick([...W.tees, ...W.ss], avoidSet, bottom);
+    // Hot — if rainy include LS options too
+    top = isRainy
+      ? pick([...W.tees, ...W.ss, ...W.ls], avoidSet, bottom)
+      : pick([...W.tees, ...W.ss], avoidSet, bottom);
     vibe = `Warm day`;
     why = `At ${temp}°F heading to ${high}°F, keep it light and breathable.`;
   }
