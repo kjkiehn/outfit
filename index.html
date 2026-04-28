@@ -82,7 +82,7 @@
 <div class="header">
   <div class="sub">Bentonville, AR</div>
   <h1>What to Wear</h1>
-  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v14</div>
+  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v15</div>
 </div>
 
 <!-- INPUT SCREEN -->
@@ -429,11 +429,12 @@ function buildOutfit(temp, high, cond, avoidSet) {
   // ── Tops + layers ──
   if (temp < 55) {
     if (bigSwing) {
-      // Cold now, warming up a lot — tee base + removable layer (not a pullover)
-      top = pick(W.tees, avoidSet);
+      // Cold now, warming up a lot — light base + removable layer
+      const lightLS = W.ls.filter(t => !["gray crewneck sweatshirt","black pullover hoodie","dark LS flannel"].includes(t));
+      top = pick([...W.tees, ...lightLS], avoidSet);
       layer = pickLayer(["casual","weather"], top, bottom, avoidSet);
       vibe = "Cold now, warming later";
-      why = `${temp}°F now but hitting ${high}°F — a tee with an open layer you can remove is smarter than a pullover.`;
+      why = `${temp}°F now but hitting ${high}°F — a light base with an open layer you can remove is the move.`;
     } else {
       // Cold with small/no swing — long sleeve is fine
       top = pick(W.ls.filter(t => !STUCK_TOPS.includes(t)), avoidSet)
@@ -444,11 +445,13 @@ function buildOutfit(temp, high, cond, avoidSet) {
     }
 
   } else if (temp < 65 && bigSwing) {
-    // Cool now, noticeably warmer later — avoid pullovers, use open layer over tee
-    top = pick(W.tees, avoidSet);
+    // Cool now, warming up a lot — light base + removable open layer
+    // Include LS button-ups and Henleys (not pullovers) as base options
+    const lightLS = W.ls.filter(t => !["gray crewneck sweatshirt","black pullover hoodie","dark LS flannel"].includes(t));
+    top = pick([...W.tees, ...W.ss, ...lightLS], avoidSet);
     layer = pickLayer(["casual","weather"], top, bottom, avoidSet);
     vibe = "Cool now, warm later";
-    why = `${temp}°F now climbing to ${high}°F — a tee with an open layer you can ditch by afternoon is the move.`;
+    why = `${temp}°F now climbing to ${high}°F — a light top with an open layer you can ditch by afternoon is the move.`;
 
   } else if (temp < 65 && isWindy) {
     top = pick([...W.tees, ...W.ls], avoidSet);
