@@ -82,7 +82,7 @@
 <div class="header">
   <div class="sub">Bentonville, AR</div>
   <h1>What to Wear</h1>
-  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v13</div>
+  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v14</div>
 </div>
 
 <!-- INPUT SCREEN -->
@@ -104,6 +104,7 @@
     <button class="main-btn" id="go-btn" onclick="generateOutfit()">Get My Outfit</button>
     <button class="link-btn" onclick="showAnchor()">🎯 Start with a specific item</button>
     <button class="link-btn" onclick="showManualLog()">+ Log what I actually wore</button>
+    <div id="worn-status" style="margin-top:12px;text-align:center;font-size:11px;color:#444;letter-spacing:0.05em"></div>
   </div>
 </div>
 
@@ -766,9 +767,16 @@ function clearWorn() {
 function renderWorn() {
   const sec = document.getElementById("worn-section");
   const tags = document.getElementById("worn-tags");
-  if (worn.length === 0) { sec.style.display = "none"; return; }
-  sec.style.display = "block";
-  tags.innerHTML = worn.map(w => `<span class="tag">${w}</span>`).join("");
+  const status = document.getElementById("worn-status");
+
+  if (worn.length === 0) {
+    sec.style.display = "none";
+    if (status) status.innerHTML = "";
+  } else {
+    sec.style.display = "block";
+    tags.innerHTML = worn.map(w => `<span class="tag">${w}</span>`).join("");
+    if (status) status.innerHTML = `${worn.length} items in worn history — <button onclick="clearWorn()" style="background:none;border:none;color:#666;font-size:11px;cursor:pointer;font-family:'Georgia',serif;text-decoration:underline">clear</button>`;
+  }
 }
 
 renderWorn();
