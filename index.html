@@ -82,7 +82,7 @@
 <div class="header">
   <div class="sub">Bentonville, AR</div>
   <h1>What to Wear</h1>
-  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v15</div>
+  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v16</div>
 </div>
 
 <!-- INPUT SCREEN -->
@@ -296,7 +296,38 @@ const COLOR = {
   "khaki shorts": "earth",
 };
 
-// (clash logic moved to ITEM_CLASHES and colorsClash below)
+// Pattern tags — solid items can pair with anything, patterned items should not pair with each other
+const PATTERN = {
+  // Solids (can pair with anything)
+  "white tee": "solid", "black tee": "solid", "tan tee": "solid", "olive green tee": "solid", "gray tee": "solid",
+  "white fitted Henley": "solid", "black relaxed Henley": "solid", "gold Henley": "solid",
+  "baby blue LS button-up": "solid", "dark blue LS button-up": "solid",
+  "gray crewneck sweatshirt": "solid", "black pullover hoodie": "solid",
+  "white SS button-up": "solid", "denim SS button-up": "solid", "mint SS button-up": "solid",
+  "olive SS button-up": "solid", "gray polo": "solid", "black SS button-up": "solid",
+  "olive shirt jacket": "solid", "denim shirt jacket": "solid", "tan Gap shirt jacket": "solid",
+  "dark North Face zip-up": "solid", "black windbreaker": "solid", "brown blazer": "solid",
+  "navy chinos": "solid", "tan chinos": "solid", "black slim jeans": "solid",
+  "medium wash slim jeans": "solid", "black carpenter jeans": "solid",
+  "olive slim pants": "solid", "olive shorts": "solid", "khaki shorts": "solid",
+  // Patterns (never pair two patterns together)
+  "blue/white stripe LS button-up": "stripe",
+  "dark LS flannel": "plaid",
+  "white/blue stripe SS button-up": "stripe",
+  "white/orange stripe SS button-up": "stripe",
+  "multicolor stripe SS button-up": "stripe",
+  "multicolor flannel overshirt": "plaid",
+};
+
+function isPattern(item) {
+  const p = PATTERN[item] || "solid";
+  return p !== "solid";
+}
+
+function patternsClash(a, b) {
+  // Two patterned items together = clash
+  return isPattern(a) && isPattern(b);
+}
 
 // Specific item-level clash pairs — things that look bad regardless of color family
 const ITEM_CLASHES = [
@@ -323,12 +354,10 @@ function colorOf(item) {
 
 function colorsClash(a, b) {
   if (itemsClash(a, b)) return true;
+  if (patternsClash(a, b)) return true;
   const ca = colorOf(a), cb = colorOf(b);
-  // neutrals and multi patterns go with anything
   if (ca === "neutral" || cb === "neutral" || ca === "multi" || cb === "multi") return false;
-  // same family is fine
   if (ca === cb) return false;
-  // warm + earth clashes
   if ((ca === "warm" && cb === "earth") || (ca === "earth" && cb === "warm")) return true;
   return false;
 }
@@ -387,11 +416,15 @@ function pickLayer(allowedTypes, top, bottom, avoidSet) {
     pool = pool.filter(l => !CASUAL_LAYERS.includes(l));
     pool = [...pool, ...WEATHER_LAYERS];
   }
-  // Filter by color compatibility with both top and bottom
+  // Filter by color AND pattern compatibility with top and bottom
   let candidates = pool.filter(l => !avoidSet.has(l));
   if (candidates.length === 0) candidates = pool;
-  // Prefer layers that don't clash with top or bottom
-  const colorFiltered = candidates.filter(l => !colorsClash(l, top) && !colorsClash(l, bottom) && !threeWayClash(top, l, bottom));
+  const colorFiltered = candidates.filter(l =>
+    !colorsClash(l, top) &&
+    !colorsClash(l, bottom) &&
+    !threeWayClash(top, l, bottom) &&
+    !patternsClash(l, top) // never layer a pattern over a pattern
+  );
   if (colorFiltered.length > 0) candidates = colorFiltered;
   if (candidates.length === 0) return null;
   return candidates[Math.floor(Math.random() * candidates.length)];
