@@ -82,7 +82,7 @@
 <div class="header">
   <div class="sub">Bentonville, AR</div>
   <h1>What to Wear</h1>
-  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v16</div>
+  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v17</div>
 </div>
 
 <!-- INPUT SCREEN -->
@@ -324,23 +324,36 @@ function isPattern(item) {
   return p !== "solid";
 }
 
-function patternsClash(a, b) {
-  // Two patterned items together = clash
-  return isPattern(a) && isPattern(b);
+function patternsClash(top, layer) {
+  const pt = PATTERN[top] || "solid";
+  const pl = PATTERN[layer] || "solid";
+  // Two stripes together = clash
+  if (pt === "stripe" && pl === "stripe") return true;
+  // Two plaids together = clash
+  if (pt === "plaid" && pl === "plaid") return true;
+  // Stripe top under plaid layer = clash (busy on busy)
+  if (pt === "stripe" && pl === "plaid") return true;
+  // Plaid top under stripe layer = clash
+  if (pt === "plaid" && pl === "stripe") return true;
+  // Solid top under any pattern = fine
+  // Any top under solid layer = fine
+  return false;
 }
 
-// Specific item-level clash pairs — things that look bad regardless of color family
+// Specific item-level clash pairs — solid black + solid navy looks like a mistake
 const ITEM_CLASHES = [
-  // Black + navy look like a mismatch, not intentional contrast
+  // Black solid top + navy solid bottom
   ["black tee", "navy chinos"],
   ["black relaxed Henley", "navy chinos"],
   ["black SS button-up", "navy chinos"],
   ["black pullover hoodie", "navy chinos"],
-  ["black slim jeans", "navy chinos"], // black jeans + navy top is fine but navy pants + black top is off
+  ["black slim jeans", "navy chinos"],
   ["black carpenter jeans", "navy chinos"],
-  // Denim on denim (top + bottom both denim)
+  // Denim on denim
   ["denim SS button-up", "medium wash slim jeans"],
   ["denim shirt jacket", "medium wash slim jeans"],
+  // NOTE: black bottoms + multicolor/patterned layers (e.g. multicolor flannel) are fine
+  // because the pattern reads as its own thing, not a direct black+navy pairing
 ];
 
 // Check if two specific items clash
