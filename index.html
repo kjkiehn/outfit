@@ -82,7 +82,7 @@
 <div class="header">
   <div class="sub">Bentonville, AR</div>
   <h1>What to Wear</h1>
-  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v18</div>
+  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v19</div>
 </div>
 
 <!-- INPUT SCREEN -->
@@ -206,9 +206,9 @@
 // ── Wardrobe ──────────────────────────────────────────────────────────────────
 const W = {
   tees: ["white tee","black tee","tan tee","olive green tee","gray tee"],
-  ls: ["white fitted Henley","black relaxed Henley","gold Henley","baby blue LS button-up","dark blue LS button-up","blue/white stripe LS button-up","dark LS flannel","gray crewneck sweatshirt","black pullover hoodie","black Lava hoodie"],
+  ls: ["white fitted Henley","black relaxed Henley","gold Henley","baby blue LS button-up","dark blue LS button-up","blue/white stripe LS button-up","dark LS flannel","gray crewneck sweatshirt","black pullover hoodie"],
   ss: ["white SS button-up","white/blue stripe SS button-up","white/orange stripe SS button-up","multicolor stripe SS button-up","denim SS button-up","mint SS button-up","olive SS button-up","gray polo","black SS button-up"],
-  layers: ["olive shirt jacket","denim shirt jacket","tan Gap shirt jacket","multicolor flannel overshirt","dark North Face zip-up","black windbreaker","brown blazer"],
+  layers: ["olive shirt jacket","denim shirt jacket","tan Gap shirt jacket","multicolor flannel overshirt","dark North Face zip-up","black windbreaker","brown blazer","black Lava hoodie"],
   chinos: ["navy chinos","tan chinos"],
   jeans: ["black slim jeans","medium wash slim jeans","black carpenter jeans"],
   pants: ["olive slim pants"],
@@ -391,14 +391,14 @@ function threeWayClash(top, layer, bottom) {
 // Layers that work as casual overshirts (over a tee)
 const CASUAL_LAYERS = ["olive shirt jacket","denim shirt jacket","tan Gap shirt jacket","multicolor flannel overshirt"];
 // Layers that are outerwear/weather layers (over anything)
-const WEATHER_LAYERS = ["dark North Face zip-up","black windbreaker"];
+const WEATHER_LAYERS = ["dark North Face zip-up","black windbreaker","black Lava hoodie"];
 // Blazer only pairs with chinos, never shorts or hoodies
 const SMART_LAYERS = ["brown blazer"];
 
 // Tops that should NOT go under a blazer
-const NO_BLAZER_TOPS = ["black pullover hoodie","black Lava hoodie","gray crewneck sweatshirt","dark LS flannel"];
+const NO_BLAZER_TOPS = ["black pullover hoodie","gray crewneck sweatshirt","dark LS flannel"];
 // Tops that should NOT go under casual shirt jackets (too bulky)
-const NO_SHIRT_JACKET_TOPS = ["gray crewneck sweatshirt","black pullover hoodie","black Lava hoodie"];
+const NO_SHIRT_JACKET_TOPS = ["gray crewneck sweatshirt","black pullover hoodie"];
 
 function pick(arr, avoid) {
   let candidates = arr.filter(x => !avoid.has(x));
