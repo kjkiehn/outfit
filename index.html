@@ -82,7 +82,7 @@
 <div class="header">
   <div class="sub">Bentonville, AR</div>
   <h1>What to Wear</h1>
-  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v17</div>
+  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v18</div>
 </div>
 
 <!-- INPUT SCREEN -->
@@ -206,7 +206,7 @@
 // ── Wardrobe ──────────────────────────────────────────────────────────────────
 const W = {
   tees: ["white tee","black tee","tan tee","olive green tee","gray tee"],
-  ls: ["white fitted Henley","black relaxed Henley","gold Henley","baby blue LS button-up","dark blue LS button-up","blue/white stripe LS button-up","dark LS flannel","gray crewneck sweatshirt","black pullover hoodie"],
+  ls: ["white fitted Henley","black relaxed Henley","gold Henley","baby blue LS button-up","dark blue LS button-up","blue/white stripe LS button-up","dark LS flannel","gray crewneck sweatshirt","black pullover hoodie","black Lava hoodie"],
   ss: ["white SS button-up","white/blue stripe SS button-up","white/orange stripe SS button-up","multicolor stripe SS button-up","denim SS button-up","mint SS button-up","olive SS button-up","gray polo","black SS button-up"],
   layers: ["olive shirt jacket","denim shirt jacket","tan Gap shirt jacket","multicolor flannel overshirt","dark North Face zip-up","black windbreaker","brown blazer"],
   chinos: ["navy chinos","tan chinos"],
@@ -267,6 +267,7 @@ const COLOR = {
   "dark LS flannel": "neutral",
   "gray crewneck sweatshirt": "neutral",
   "black pullover hoodie": "neutral",
+  "black Lava hoodie": "neutral",
   // Short sleeve
   "white SS button-up": "neutral",
   "white/blue stripe SS button-up": "cool",
@@ -302,7 +303,7 @@ const PATTERN = {
   "white tee": "solid", "black tee": "solid", "tan tee": "solid", "olive green tee": "solid", "gray tee": "solid",
   "white fitted Henley": "solid", "black relaxed Henley": "solid", "gold Henley": "solid",
   "baby blue LS button-up": "solid", "dark blue LS button-up": "solid",
-  "gray crewneck sweatshirt": "solid", "black pullover hoodie": "solid",
+  "gray crewneck sweatshirt": "solid", "black pullover hoodie": "solid", "black Lava hoodie": "solid",
   "white SS button-up": "solid", "denim SS button-up": "solid", "mint SS button-up": "solid",
   "olive SS button-up": "solid", "gray polo": "solid", "black SS button-up": "solid",
   "olive shirt jacket": "solid", "denim shirt jacket": "solid", "tan Gap shirt jacket": "solid",
@@ -395,9 +396,9 @@ const WEATHER_LAYERS = ["dark North Face zip-up","black windbreaker"];
 const SMART_LAYERS = ["brown blazer"];
 
 // Tops that should NOT go under a blazer
-const NO_BLAZER_TOPS = ["black pullover hoodie","gray crewneck sweatshirt","dark LS flannel"];
+const NO_BLAZER_TOPS = ["black pullover hoodie","black Lava hoodie","gray crewneck sweatshirt","dark LS flannel"];
 // Tops that should NOT go under casual shirt jackets (too bulky)
-const NO_SHIRT_JACKET_TOPS = ["gray crewneck sweatshirt","black pullover hoodie"];
+const NO_SHIRT_JACKET_TOPS = ["gray crewneck sweatshirt","black pullover hoodie","black Lava hoodie"];
 
 function pick(arr, avoid) {
   let candidates = arr.filter(x => !avoid.has(x));
