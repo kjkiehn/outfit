@@ -82,7 +82,7 @@
 <div class="header">
   <div class="sub">Bentonville, AR</div>
   <h1>What to Wear</h1>
-  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v19</div>
+  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v20</div>
 </div>
 
 <!-- INPUT SCREEN -->
@@ -425,10 +425,19 @@ function pickLayer(allowedTypes, top, bottom, avoidSet) {
     const shortsBottom = bottom && bottom.includes("shorts");
     if (!noBlazerTop && !shortsBottom) pool = [...pool, ...SMART_LAYERS];
   }
-  // Remove shirt jackets if top is too bulky
+  // Remove shirt jackets if top is too bulky (hoodies, sweatshirts)
   if (NO_SHIRT_JACKET_TOPS.includes(top)) {
     pool = pool.filter(l => !CASUAL_LAYERS.includes(l));
     pool = [...pool, ...WEATHER_LAYERS];
+  }
+  // Remove casual shirt jackets if top is a collared button-up (collar-on-collar looks off)
+  // and especially if top is patterned (pattern + collar + layer = too busy)
+  const isButtonUp = top && (top.includes("button-up") || top.includes("Henley"));
+  const topIsPattern = isPattern(top);
+  if (isButtonUp && topIsPattern) {
+    // Patterned button-up — only allow weather layers (zip-up, windbreaker, hoodie)
+    pool = pool.filter(l => !CASUAL_LAYERS.includes(l) && !SMART_LAYERS.includes(l));
+    if (!pool.some(l => WEATHER_LAYERS.includes(l))) pool = [...pool, ...WEATHER_LAYERS];
   }
   // Filter by color AND pattern compatibility with top and bottom
   let candidates = pool.filter(l => !avoidSet.has(l));
@@ -437,7 +446,7 @@ function pickLayer(allowedTypes, top, bottom, avoidSet) {
     !colorsClash(l, top) &&
     !colorsClash(l, bottom) &&
     !threeWayClash(top, l, bottom) &&
-    !patternsClash(l, top) // never layer a pattern over a pattern
+    !patternsClash(l, top)
   );
   if (colorFiltered.length > 0) candidates = colorFiltered;
   if (candidates.length === 0) return null;
