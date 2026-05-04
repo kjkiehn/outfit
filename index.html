@@ -307,7 +307,7 @@ const PATTERN = {
   "white SS button-up": "solid", "denim SS button-up": "solid", "mint SS button-up": "solid",
   "olive SS button-up": "solid", "gray polo": "solid", "black SS button-up": "solid",
   "olive shirt jacket": "solid", "denim shirt jacket": "solid", "tan Gap shirt jacket": "solid",
-  "dark North Face zip-up": "solid", "black windbreaker": "solid", "brown blazer": "solid",
+  "dark North Face zip-up": "multi", "black windbreaker": "solid", "brown blazer": "solid",
   "navy chinos": "solid", "tan chinos": "solid", "black slim jeans": "solid",
   "medium wash slim jeans": "solid", "black carpenter jeans": "solid",
   "olive slim pants": "solid", "olive shorts": "solid", "khaki shorts": "solid",
@@ -451,7 +451,8 @@ function pickLayer(allowedTypes, top, bottom, avoidSet) {
     !colorsClash(l, top) &&
     !colorsClash(l, bottom) &&
     !threeWayClash(top, l, bottom) &&
-    !patternsClash(l, top)
+    !patternsClash(l, top) &&
+    !(isPattern(top) && (PATTERN[l] === "multi")) // no busy layer over a patterned top
   );
   if (colorFiltered.length > 0) candidates = colorFiltered;
   if (candidates.length === 0) return null;
