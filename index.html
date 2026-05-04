@@ -82,7 +82,7 @@
 <div class="header">
   <div class="sub">Bentonville, AR</div>
   <h1>What to Wear</h1>
-  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v20</div>
+  <div style="font-size:9px;color:#333;margin-top:6px;letter-spacing:0.1em">v21</div>
 </div>
 
 <!-- INPUT SCREEN -->
@@ -394,6 +394,7 @@ const CASUAL_LAYERS = ["olive shirt jacket","denim shirt jacket","tan Gap shirt 
 const WEATHER_LAYERS = ["dark North Face zip-up","black windbreaker","black Lava hoodie"];
 // Blazer only pairs with chinos, never shorts or hoodies
 const SMART_LAYERS = ["brown blazer"];
+const PULLOVER_LAYERS = ["black Lava hoodie","black pullover hoodie"]; // never over collared tops
 
 // Tops that should NOT go under a blazer
 const NO_BLAZER_TOPS = ["black pullover hoodie","gray crewneck sweatshirt","dark LS flannel"];
@@ -434,6 +435,10 @@ function pickLayer(allowedTypes, top, bottom, avoidSet) {
   // and especially if top is patterned (pattern + collar + layer = too busy)
   const isButtonUp = top && (top.includes("button-up") || top.includes("Henley"));
   const topIsPattern = isPattern(top);
+  // Block pullover layers (hoodies) over any collared top — collar pokes out awkwardly
+  if (isButtonUp) {
+    pool = pool.filter(l => !PULLOVER_LAYERS.includes(l));
+  }
   if (isButtonUp && topIsPattern) {
     // Patterned button-up — only allow weather layers (zip-up, windbreaker, hoodie)
     pool = pool.filter(l => !CASUAL_LAYERS.includes(l) && !SMART_LAYERS.includes(l));
