@@ -554,10 +554,20 @@ function buildOutfit(temp, high, cond, avoidSet) {
   if (isRainy) {
     vibe = "Rainy day";
     why += " Blundstones for the wet.";
-    // Swap casual layer for weather layer if raining
     if (layer && CASUAL_LAYERS.includes(layer)) {
       layer = pickLayer(["weather"], top, bottom, avoidSet) || layer;
     }
+  }
+
+  // Never have two weather/outerwear pieces — if top is already a pullover, no layer needed
+  const topIsOuterwear = PULLOVER_LAYERS.includes(top) || top === "gray crewneck sweatshirt";
+  if (topIsOuterwear) layer = null;
+
+  // Weather layers (North Face, windbreaker, Lava hoodie) are standalone — don't stack them
+  if (layer && WEATHER_LAYERS.includes(layer)) {
+    // Make sure top is appropriate base under a weather layer
+    const badBase = WEATHER_LAYERS.includes(top) || PULLOVER_LAYERS.includes(top);
+    if (badBase) layer = null;
   }
 
   return { top, layer, bottom, shoes, vibe, why };
